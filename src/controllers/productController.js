@@ -4,7 +4,13 @@ class ProductController {
   // Create product:
   static createproduct = async (req, res) => {
     try {
-      const product = await productService.createProductService(req.body);
+      const product = await productService.createProductService({
+        name: req.body.name,
+        category: req.body.category,
+        price: req.body.price,
+        stock: req.body.stock,
+        imageBuffer: req.file ? req.file.buffer : null,
+      });
 
       return res.status(201).json({
         success: true,

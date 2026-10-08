@@ -1,8 +1,7 @@
-const { sequelize } = require("../config/dbConnect");
+const sequelize = require("../config/dbConnect");
 const Product = require("../models/product");
 const Order = require("../models/order");
 const OrderItem = require("../models/orderItem");
-
 
 // Create Order:
 const createOrderService = async (userId, items) => {
@@ -69,7 +68,7 @@ const createOrderService = async (userId, items) => {
     for (const item of orderItems) {
       await OrderItem.create(
         {
-          orderid: order.id,
+          orderId: order.id,
           productId: item.productId,
           quantity: item.quantity,
           price: item.price,
@@ -80,6 +79,8 @@ const createOrderService = async (userId, items) => {
       );
     }
 
+    await transaction.commit();
+
     return {
       id: order.id,
       userId: order.userId,
@@ -88,10 +89,8 @@ const createOrderService = async (userId, items) => {
       createdAt: order.createdAt,
     };
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    await transaction.rollback();
+    throw error;
   }
 };
 
@@ -107,5 +106,35 @@ const getUserOrdersService = async (userId) => {
   return orders;
 };
 
+// Get order by id:
+const getOrderByIdService = async (orderId, userId) => {
+  const order = await Order.findOne({
+    where: {
+      id: orderId,
+      userId: userId,
+    },
 
-module.exports = {createOrderService, getUserOrdersService};
+    attributes: ["id", "userId", "totalAmount", "status", "createdAt"],
+    include: [
+      {
+        model: OrderItem,
+        attributes: ["id", "productId", "quantity", "price"],
+        include: [
+          {
+            model: Product,
+
+            attributes: ["id", "name", "category"],
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  return order;
+};
+
+module.exports = { createOrderService, getUserOrdersService, getOrderByIdService };

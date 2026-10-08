@@ -7,4 +7,4 @@ const createProductSchema = Joi.object({
   stock: Joi.number().integer().min(0).required(),
 });
 
-module.exports = createProductSchema;
+module.exports = {createProductSchema};

@@ -19,6 +19,31 @@ const Product = sequelize.define(
       allowNull: false,
     },
 
+    image: {
+      type: DataTypes.JSON,
+      allowNull: true,
+
+      get() {
+        const value = this.getDataValue("image");
+
+        if (!value) {
+          return null;
+        }
+
+        // If MySQL/Sequelize returns JSON as a string
+        if (typeof value === "string") {
+          try {
+            return JSON.parse(value);
+          } catch (error) {
+            console.error("Invalid product image JSON:", value);
+            return null;
+          }
+        }
+
+        return value;
+      },
+    },
+
     stock: {
       type: DataTypes.INTEGER,
       allowNull: false,

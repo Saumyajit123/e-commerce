@@ -12,4 +12,4 @@ const createOrderSchema = Joi.object({
     ),
 });
 
-module.exports = createOrderSchema;
+module.exports = {createOrderSchema};

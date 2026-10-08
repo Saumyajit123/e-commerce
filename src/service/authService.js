@@ -1,7 +1,9 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const User = require("../models/user");
+const mailService = require("./mailService");
 
 const {
   generateSecretKey,
@@ -42,7 +44,13 @@ const loginService = async ({ email, password }) => {
     throw new Error("Invalid email or password");
   }
 
+  // console.log("Email:", email);
+  // console.log("Password received:", password);
+  // console.log("Password hash:", user.password);
+
   const isPasswordValid = await user.comparePassword(password);
+
+  // console.log("Password valid:", isPasswordValid);
 
   if (!isPasswordValid) {
     throw new Error("Invalid email or password");
@@ -170,10 +178,77 @@ const getProfileService = async (userId) => {
   return user;
 };
 
+// Forgot password:
+const forgotPasswordService = async (email) => {
+  const user = await User.findOne({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const otp = crypto.randomInt(100000, 1000000).toString();
+  const otpHash = await bcrypt.hash(otp, 10);
+  const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  await user.update({
+    resetOtpHash: otpHash,
+    resetOtpExpiresAt: expiry,
+  });
+
+  await mailService.sendResetOtp(email, otp);
+
+  return true;
+};
+
+// Reset password:
+const resetPasswordService = async ({ email, otp, password }) => {
+  const user = await User.findOne({
+    where: {
+      email,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (!user.resetOtpHash || !user.resetOtpExpiresAt) {
+    throw new Error("OTP not found");
+  }
+
+  if (new Date() > new Date(user.resetOtpExpiresAt)) {
+    throw new Error("OTP has expired");
+  }
+
+  const validOtp = await bcrypt.compare(otp, user.resetOtpHash);
+
+  if (!validOtp) {
+    throw new Error("Invalid OTP");
+  }
+
+  await user.update({
+    password,
+    resetOtpHash: null,
+    resetOtpExpiresAt: null,
+    secretKey: null,
+    refreshTokenHash: null,
+  });
+
+  await mailService.sendPasswordResetSuccess(email);
+
+  return true;
+};
+
 module.exports = {
   registerService,
   loginService,
   refreshAccessTokenService,
   logoutService,
   getProfileService,
+  forgotPasswordService,
+  resetPasswordService,
 };

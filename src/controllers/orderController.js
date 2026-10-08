@@ -25,7 +25,7 @@ class OrderController {
   // Get user orders:
   static getUserOrders = async (req, res) => {
     try {
-      const orders = await orderService.getUserOrders(req.user.id);
+      const orders = await orderService.getUserOrdersService(req.user.id);
 
       return res.status(200).json({
         success: true,

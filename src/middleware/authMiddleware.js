@@ -34,14 +34,14 @@ class AuthMiddleware {
 
       const decoded = jwt.decode(token);
 
-      if (!decoded || decoded.id) {
+      if (!decoded || !decoded.userId) {
         return res.status(401).json({
           success: false,
           message: "Invalid access token",
         });
       }
 
-      const user = await User.findByPk(decoded.id);
+      const user = await User.findByPk(decoded.userId);
 
       if (!user) {
         return res.status(401).json({

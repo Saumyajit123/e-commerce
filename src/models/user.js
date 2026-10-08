@@ -1,4 +1,4 @@
-const  sequelize  = require("../config/dbConnect");
+const sequelize = require("../config/dbConnect");
 const { DataTypes } = require("sequelize");
 const bcryptjs = require("bcryptjs");
 
@@ -25,9 +25,9 @@ const User = sequelize.define(
     },
 
     role: {
-      type: DataTypes.ENUM("customer", "admin"),
+      type: DataTypes.ENUM("user", "admin"),
       allowNull: false,
-      defaultValue: "customer",
+      defaultValue: "user",
     },
 
     refreshTokenHash: {
@@ -43,6 +43,16 @@ const User = sequelize.define(
     isActive: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
+    },
+
+    resetOtpHash: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+
+    resetOtpExpiresAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {
