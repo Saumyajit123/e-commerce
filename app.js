@@ -44,7 +44,7 @@ sequelize
   .authenticate()
   .then(() => {
     console.log("MySQL database connected successfully");
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => console.error("DB connection error:", err));
 
